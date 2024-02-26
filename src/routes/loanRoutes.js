@@ -8,22 +8,30 @@ router.get('/', (req, res) => {
   res.send('Hello, welcome to the loan app');
 });
 
+// update this route so that it includes name of person who took the loan
+// update this route so that user posts interest, payment period too
 router.post('/takeLoan', async (req, res) => {
   try {
-    const existingLoan = await Loan.findOne();
-    if (existingLoan && existingLoan.outstandingBalance > 0) {
-      return res.status(400).json({ error: 'User has an outstanding loan balance' });
+    const { name, loanAmount, interestRate, paymentPeriod } = req.body;
+
+    // Validate parameters
+    if (!name || !loanAmount || !interestRate || !paymentPeriod) {
+      return res.status(400).json({ error: 'Invalid loan parameters' });
     }
 
-    const loanAmount = req.body.loanAmount;
-    if (!loanAmount || isNaN(loanAmount) || loanAmount <= 0) {
-      return res.status(400).json({ error: 'Invalid loan amount' });
+    // Check if the user already has an outstanding loan
+    const existingLoan = await Loan.findOne({ name, outstandingBalance: { $gt: 0 } });
+
+    if (existingLoan) {
+      return res.status(400).json({ error: 'User already has an outstanding loan balance' });
     }
 
+    // Create a new loan
     const newLoan = new Loan({
+      name,
       outstandingBalance: loanAmount,
-      interestRate: 0.1,
-      paymentPeriod: 18,
+      interestRate,
+      paymentPeriod,
       payments: [],
     });
 
@@ -35,14 +43,26 @@ router.post('/takeLoan', async (req, res) => {
   }
 });
 
+
 router.get('/viewPayments', async (req, res) => {
   try {
-    const loan = await Loan.findOne();
-    if (!loan) {
-      return res.status(404).json({ error: 'No loan found' });
+    const { name } = req.query;
+
+    // Validate parameters
+    if (!name) {
+      return res.status(400).json({ error: 'Loan taker name is required' });
     }
 
-    res.json(loan);
+    // Find the user by name
+    const userLoan = await Loan.findOne({ name });
+
+    // Check if the user exists
+    if (!userLoan) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Return the payments for the specific loan taker
+    res.json({ payments: userLoan.payments });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -51,34 +71,46 @@ router.get('/viewPayments', async (req, res) => {
 
 router.post('/submitInstallment', async (req, res) => {
   try {
-    const installmentAmount = req.body.installmentAmount;
-    if (!installmentAmount || isNaN(installmentAmount) || installmentAmount <= 0) {
-      return res.status(400).json({ error: 'Invalid installment amount' });
+    const { name, installmentAmount } = req.body;
+
+    // Validate parameters
+    if (!name || !installmentAmount) {
+      return res.status(400).json({ error: 'Both name and installmentAmount are required' });
     }
 
-    const loan = await Loan.findOne();
-    if (!loan || loan.outstandingBalance <= 0) {
-      return res.status(400).json({ error: 'No outstanding balance to pay' });
+    // Find the user by name
+    const userLoan = await Loan.findOne({ name });
+
+    // Check if the user exists
+    if (!userLoan) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    const interestComponent = loan.outstandingBalance * loan.interestRate;
-    const principalComponent = installmentAmount - interestComponent;
+    // Update the user's outstanding balance, interest, and principal
+    const updatedBalance = userLoan.outstandingBalance - installmentAmount;
+    const interestPaid = userLoan.interestPaid + (userLoan.interestRate / 12) * userLoan.outstandingBalance;
+    const principalPaid = userLoan.principalPaid + installmentAmount;
 
-    loan.outstandingBalance -= principalComponent;
-    loan.payments.push({
-      amountPaid: installmentAmount,
-      outstandingBalance: loan.outstandingBalance,
-      interestPaid: interestComponent,
-      principalPaid: principalComponent,
+    // Update the loan document
+    userLoan.outstandingBalance = updatedBalance;
+    userLoan.interestPaid = interestPaid;
+    userLoan.principalPaid = principalPaid;
+    userLoan.payments.push({
+      installmentAmount,
+      outstandingBalance: updatedBalance,
+      interestPaid,
+      principalPaid,
     });
 
-    await loan.save();
+    // Save the updated document
+    await userLoan.save();
 
     res.json({
-      amountPaid: installmentAmount,
-      outstandingBalance: loan.outstandingBalance,
-      interestPaid: interestComponent,
-      principalPaid: principalComponent,
+      message: 'Installment submitted successfully',
+      installmentAmount,
+      outstandingBalance: updatedBalance,
+      interestPaid,
+      principalPaid,
     });
   } catch (error) {
     console.error(error);
