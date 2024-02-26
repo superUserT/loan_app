@@ -1,0 +1,22 @@
+{
+  "name": "loan_app",
+  "version": "1.0.0",
+  "description": "A loan application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/superUserT/loan_app.git"
+  },
+  "author": "Thabiso Rantsho",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/superUserT/loan_app/issues"
+  },
+  "homepage": "https://github.com/superUserT/loan_app#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
