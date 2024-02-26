@@ -5,7 +5,7 @@ const Loan = require('../models/loan');
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  res.send('Hello, this is the root path!');
+  res.send('Hello, welcome to the loan app');
 });
 
 router.post('/takeLoan', async (req, res) => {

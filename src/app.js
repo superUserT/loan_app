@@ -19,7 +19,9 @@ mongoose.connect('mongodb://localhost:27017/loans', {
 
 
 // Middleware
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
+
+app.use(express.json());
 
 // Routes
 app.use('/', loanRoutes);
