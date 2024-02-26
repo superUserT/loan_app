@@ -4,6 +4,10 @@ const Loan = require('../models/loan');
 
 const router = express.Router();
 
+router.get('/', (req, res) => {
+  res.send('Hello, this is the root path!');
+});
+
 router.post('/takeLoan', async (req, res) => {
   try {
     const existingLoan = await Loan.findOne();
