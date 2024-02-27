@@ -5,6 +5,7 @@ const loanSchema = new mongoose.Schema({
   outstandingBalance: { type: Number, required: true },
   interestRate: { type: Number, required: true },
   paymentPeriod: { type: Number, required: true },
+  loanTakenDate: { type: Date, required: true }, // New field for loan taken date
   payments: { type: Array, default: [] },
 });
 
