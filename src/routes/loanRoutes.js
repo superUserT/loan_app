@@ -76,6 +76,14 @@ function calculateTotalAmount(monthlyAmount, paymentPeriods) {
 }
 
 
+function addMonthsToDate(inputDate, monthsToAdd) {
+  const date = new Date(inputDate);
+  date.setMonth(date.getMonth() + monthsToAdd);
+  const formattedDate = date.toISOString().split('T')[0];
+  return formattedDate;
+}
+
+
 router.post('/submitInstallment', async (req, res) => {
   try {
     const { name, installmentAmount } = req.body;
@@ -90,23 +98,26 @@ router.post('/submitInstallment', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    const currentDate = new Date();
+    const loanCutoffDate = addMonthsToDate(userLoan.loanTakenDate, userLoan.paymentPeriod);
+    
+    if (currentDate > loanCutoffDate) {
+      return res.status(400).json({ error: 'Loan payment period has ended' });
+    }
+
     const monthlyPayment = calculateMonthlyPayment(userLoan.interestRate, userLoan.paymentPeriod, userLoan.outstandingBalance);
     const totalAmount = calculateTotalAmount(monthlyPayment, userLoan.paymentPeriod);
 
-    // Update outstanding balance, interest paid, and principal paid based on the monthly payment
     const updatedBalance = (userLoan.outstandingBalance - installmentAmount).toFixed(2);
     const amountWithInterest = (totalAmount - installmentAmount).toFixed(2);
-    const principalPaid = (userLoan.outstandingBalance - updatedBalance).toFixed(2);
 
     userLoan.outstandingBalance = parseFloat(updatedBalance);
 
-    userLoan.principalPaid = parseFloat(principalPaid);
 
     userLoan.payments.push({
       installmentAmount: parseFloat(installmentAmount),
       amountWithInterest: parseFloat(amountWithInterest),
       outstandingBalance: parseFloat(updatedBalance),
-      principalPaid: parseFloat(principalPaid),
       installmentPaymentDate: new Date(),
     });
 
@@ -117,7 +128,6 @@ router.post('/submitInstallment', async (req, res) => {
       installmentAmount: parseFloat(installmentAmount),
       amountWithInterest: parseFloat(amountWithInterest),
       outstandingBalance: parseFloat(updatedBalance),
-      principalPaid: parseFloat(principalPaid),
     });
   } catch (error) {
     console.error(error);
