@@ -62,23 +62,17 @@ router.get('/viewPayments', async (req, res) => {
 });
 
 
-
-function monthsToYears(months) {
-  years = (months / 12);
-
-  yearsRounded = years.toFixed(1);
-
-  return yearsRounded;
-}
-
-
-// Function to calculate monthly payment using PMT formula
-function calculateMonthlyPayment(Pv, APR, years) {
-  const R = (APR / 100) / 12;
-  const n = years * 12;
-  const monthlyPayment = (Pv * R) / (1 - Math.pow(1 + R, -n));
+function calculateMonthlyPayment(interestRate, paymentPeriods, presentValue) {
+  let monthlyRate = interestRate / 12 / 100;
+  let monthlyPayment = presentValue * monthlyRate / (1 - Math.pow(1 + monthlyRate, -paymentPeriods));
 
   return monthlyPayment;
+}
+
+function calculateTotalAmount(monthlyAmount, paymentPeriods) {
+  let totalAmount = monthlyAmount * paymentPeriods;
+
+  return totalAmount;
 }
 
 
@@ -96,11 +90,8 @@ router.post('/submitInstallment', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Calculate monthly payment using PMT formula
-    const monthlyPayment = calculateMonthlyPayment(userLoan.outstandingBalance, userLoan.interestRate * 100, monthsToYears(userLoan.paymentPeriod));
-
-    // Outstanding amount is total amount - installments
-    const totalAmount = (monthlyPayment * 12).toFixed(2);
+    const monthlyPayment = calculateMonthlyPayment(userLoan.interestRate, userLoan.paymentPeriod, userLoan.outstandingBalance);
+    const totalAmount = calculateTotalAmount(monthlyPayment, userLoan.paymentPeriod);
 
     // Update outstanding balance, interest paid, and principal paid based on the monthly payment
     const updatedBalance = (userLoan.outstandingBalance - installmentAmount).toFixed(2);
@@ -109,9 +100,8 @@ router.post('/submitInstallment', async (req, res) => {
 
     userLoan.outstandingBalance = parseFloat(updatedBalance);
 
-    userLoan.principalPaid += parseFloat(principalPaid);
+    userLoan.principalPaid = parseFloat(principalPaid);
 
-    // Add installment details to the payments array with the current date
     userLoan.payments.push({
       installmentAmount: parseFloat(installmentAmount),
       amountWithInterest: parseFloat(amountWithInterest),
@@ -129,6 +119,33 @@ router.post('/submitInstallment', async (req, res) => {
       outstandingBalance: parseFloat(updatedBalance),
       principalPaid: parseFloat(principalPaid),
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+router.get('/viewPaymentTable/:name', async (req, res) => {
+  try {
+    const { name } = req.params;
+    const userLoan = await Loan.findOne({ name });
+
+    if (!userLoan) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const paymentsTable = userLoan.payments.map(payment => ({
+      Installment_Amount: payment.installmentAmount,
+      Amount_With_Interest: payment.amountWithInterest,
+      Outstanding_Balance: payment.outstandingBalance,
+      Principal_Paid: payment.principalPaid,
+      Interest_Paid: payment.interestPaid,
+      Installment_Payment_Date: payment.installmentPaymentDate.toISOString().split('T')[0],  // Format date as YYYY-MM-DD
+    }));
+
+    res.json({ paymentsTable });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
