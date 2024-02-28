@@ -35,7 +35,7 @@ loan-app/
 
 I have attached an image to show how the data flows in this application:
 
-![loanApp Data Flow Diagram](loan_app/LoanApp.jpg)
+![LoanApp](https://github.com/superUserT/loan_app/assets/126233103/77a1cdaf-1993-432a-8f20-57293b30a404)
 
 
 Admittedly I am a bit rusty when it comes to UML, but this should suffice.
