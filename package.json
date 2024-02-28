@@ -4,7 +4,10 @@
   "description": "A loan application",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --setupFiles=./jest.setup.js"
+  },
+  "jest": {
+    "setupFiles": ["loan_app/jest.setup.js"]
   },
   "repository": {
     "type": "git",
@@ -17,6 +20,13 @@
   },
   "homepage": "https://github.com/superUserT/loan_app#readme",
   "dependencies": {
-    "express": "^4.18.2"
+    "@sinonjs/commons": "^4.0.0-alpha.0",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "mongoose": "^6.0.12"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
   }
 }
