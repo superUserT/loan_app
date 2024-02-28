@@ -111,6 +111,8 @@ router.post('/submitInstallment', async (req, res) => {
     const updatedBalance = (userLoan.outstandingBalance - installmentAmount).toFixed(2);
     const amountWithInterest = (totalAmount - installmentAmount).toFixed(2);
 
+
+    userLoan.cumulativeInstallments += parseFloat(installmentAmount);
     userLoan.outstandingBalance = parseFloat(updatedBalance);
 
 
@@ -128,6 +130,7 @@ router.post('/submitInstallment', async (req, res) => {
       installmentAmount: parseFloat(installmentAmount),
       amountWithInterest: parseFloat(amountWithInterest),
       outstandingBalance: parseFloat(updatedBalance),
+      cumulativeInstallments: parseFloat(userLoan.cumulativeInstallments),
     });
   } catch (error) {
     console.error(error);
