@@ -1,4 +1,4 @@
-# Loan Application
+# Loan Application: Reducing balance method
 
 ## Project Description
 
@@ -31,6 +31,46 @@ loan-app/
 |-- README.md
 ```
 
+## Dataflow
+
+I have attached an image to show how the data flows in this application:
+
+[loanApp Data Flow Diagram](LoanApp.jpg)
+
+
+Admittedly I am a bit rusty when it comes to UML, but this should suffice.
+
+### Diagram Summary
+
+In the provided application, the flow of data involves handling loan-related operations through an Express.js application with MongoDB as the database. Here's a high-level overview of the data flow:
+
+1. **Client Requests**: The flow begins when a client (e.g., a web browser or API client) sends HTTP requests to the Express.js server.
+
+2. **Express.js Routes**: Express.js routes, defined in the `loanRoutes.js` file, handle incoming requests. These routes include:
+
+   - `/`: Responds with a welcome message.
+   - `/takeLoan`: Handles requests for taking a loan. Validates input, checks for an existing loan, and creates a new loan entry in the MongoDB database.
+   - `/viewPayments`: Retrieves and returns payment information for a specific user.
+   - `/submitInstallment`: Handles the submission of loan installments. Validates input, calculates loan details, and updates the user's loan record.
+   - `/viewPaymentTable/:name`: Retrieves and returns a payment table for a specific user.
+
+3. **MongoDB Operations**: The routes interact with the MongoDB database using Mongoose, a MongoDB object modeling tool for Node.js. MongoDB operations include:
+
+   - Retrieving existing loans (`Loan.findOne`).
+   - Creating new loan entries (`new Loan` and `save()`).
+   - Updating existing loan records based on installment submissions.
+
+4. **LoanUtils Module**: The application utilizes a `loanUtils.js` module that provides utility functions for loan calculations. These functions include calculating monthly payments, total amounts, and determining the cutoff date for loan payments.
+
+5. **HTTP Responses**: Express.js sends appropriate HTTP responses back to the client, including success messages, error messages, and requested data.
+
+6. **Error Handling**: The application includes error handling to manage situations such as invalid input, user not found, and internal server errors. Errors are appropriately logged, and corresponding HTTP status codes and error messages are returned to the client.
+
+7. **Express Server**: The Express server listens for incoming requests on a specified port (`3000` in this case) and logs a message indicating that the server is running.
+
+Overall, the data flow involves handling client requests, routing them through Express.js, interacting with MongoDB for data storage and retrieval, performing loan calculations using utility functions, and responding to clients with appropriate HTTP responses.
+
+
 ## Installation Instructions
 
 First clone the project into your pc my using the following command in your command terminal of choice:
@@ -58,7 +98,7 @@ sudo apt-get install -y mongodb-org
 
 Since the project uses a local instance of mongo, you have to initialise mongo, create the database then run the project.
 
-### intialise mongo
+### Intialise mongo
 
 On one terminal window enter:
 
