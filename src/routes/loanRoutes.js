@@ -120,6 +120,7 @@ router.post('/submitInstallment', async (req, res) => {
       installmentAmount: parseFloat(installmentAmount),
       amountWithInterest: parseFloat(amountWithInterest),
       outstandingBalance: parseFloat(updatedBalance),
+      cumulativeInstallments: parseFloat(userLoan.cumulativeInstallments),
       installmentPaymentDate: new Date(),
     });
 
@@ -153,9 +154,8 @@ router.get('/viewPaymentTable/:name', async (req, res) => {
       Installment_Amount: payment.installmentAmount,
       Amount_With_Interest: payment.amountWithInterest,
       Outstanding_Balance: payment.outstandingBalance,
-      Principal_Paid: payment.principalPaid,
-      Interest_Paid: payment.interestPaid,
-      Installment_Payment_Date: payment.installmentPaymentDate.toISOString().split('T')[0],  // Format date as YYYY-MM-DD
+      cumulativeInstallments: payment.cumulativeInstallments,
+      Installment_Payment_Date: payment.installmentPaymentDate.toISOString().split('T')[0],
     }));
 
     res.json({ paymentsTable });
