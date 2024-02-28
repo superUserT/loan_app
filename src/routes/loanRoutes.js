@@ -1,5 +1,6 @@
 const express = require('express');
 const Loan = require('../models/loan');
+const loanUtils = require('../loanUtils');
 
 const router = express.Router();
 
@@ -62,28 +63,6 @@ router.get('/viewPayments', async (req, res) => {
 });
 
 
-function calculateMonthlyPayment(interestRate, paymentPeriods, presentValue) {
-  let monthlyRate = interestRate / 12 / 100;
-  let monthlyPayment = presentValue * monthlyRate / (1 - Math.pow(1 + monthlyRate, -paymentPeriods));
-
-  return monthlyPayment;
-}
-
-function calculateTotalAmount(monthlyAmount, paymentPeriods) {
-  let totalAmount = monthlyAmount * paymentPeriods;
-
-  return totalAmount;
-}
-
-
-function addMonthsToDate(inputDate, monthsToAdd) {
-  const date = new Date(inputDate);
-  date.setMonth(date.getMonth() + monthsToAdd);
-  const formattedDate = date.toISOString().split('T')[0];
-  return formattedDate;
-}
-
-
 router.post('/submitInstallment', async (req, res) => {
   try {
     const { name, installmentAmount } = req.body;
@@ -99,14 +78,14 @@ router.post('/submitInstallment', async (req, res) => {
     }
 
     const currentDate = new Date();
-    const loanCutoffDate = addMonthsToDate(userLoan.loanTakenDate, userLoan.paymentPeriod);
+    const loanCutoffDate = loanUtils.addMonthsToDate(userLoan.loanTakenDate, userLoan.paymentPeriod);
     
     if (currentDate > loanCutoffDate) {
       return res.status(400).json({ error: 'Loan payment period has ended' });
     }
 
-    const monthlyPayment = calculateMonthlyPayment(userLoan.interestRate, userLoan.paymentPeriod, userLoan.outstandingBalance);
-    const totalAmount = calculateTotalAmount(monthlyPayment, userLoan.paymentPeriod);
+    const monthlyPayment = loanUtils.calculateMonthlyPayment(userLoan.interestRate, userLoan.paymentPeriod, userLoan.outstandingBalance);
+    const totalAmount = loanUtils.calculateTotalAmount(monthlyPayment, userLoan.paymentPeriod);
 
     const updatedBalance = (userLoan.outstandingBalance - installmentAmount).toFixed(2);
     const amountWithInterest = (totalAmount - installmentAmount).toFixed(2);
